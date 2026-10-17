@@ -1,0 +1,42 @@
+{
+  "name": "veilant-project1",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run db:setup && concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite --host 0.0.0.0",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "npm run build:server && vite build",
+    "build:server": "tsc -p server/tsconfig.json",
+    "preview": "vite preview --host 0.0.0.0",
+    "db:seed": "tsx server/seed.ts",
+    "db:migrate": "tsx server/migrate.ts",
+    "db:up": "docker compose up -d --wait db",
+    "db:down": "docker compose down",
+    "db:setup": "npm run db:up && npm run db:migrate && npm run db:seed",
+    "lint": "oxlint ."
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.15.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.31",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^9.1.2",
+    "oxlint": "^1.81.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vite": "^8.3.0"
+  }
+}

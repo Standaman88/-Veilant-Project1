@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-veilant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-veilant_local_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-veilant}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - veilant-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  veilant-postgres:
