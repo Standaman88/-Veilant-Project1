@@ -27,6 +27,8 @@ A cybersecurity vulnerability monitoring dashboard built with React + TypeScript
    npm run build
 5. Apply the schema and seed manually:
    npm run db:setup
+6. Run the production server after building:
+   npm start
 
 PostgreSQL data is stored in the named `veilant-postgres` volume and survives API and container restarts. `npm run db:down` stops the containers without deleting that volume. Do not use `docker compose down -v` unless you intend to erase the database. The example credentials are for local development only.
 
@@ -46,3 +48,9 @@ The seed is deterministic, uses varied severity and status distributions, and on
 Create and update requests accept `assetId`, `title`, `severity`, `cvss`, `status`, `owner`, `packageName`, `lastSeen`, and `dueDate`.
 
 `GET /api/health` reports PostgreSQL connectivity as `{"status":"ok","database":{"status":"connected"}}`; it returns HTTP 503 and a disconnected database status when PostgreSQL is unavailable.
+
+## Deploying to Render
+
+The root `render.yaml` Blueprint describes a Render web service and PostgreSQL database. In Render, create a new Blueprint Instance from this GitHub repository and select the `main` branch. Render will build the frontend and API, run the database schema and sample seed on service startup, then serve both the dashboard and API from the public web service URL.
+
+The startup seed only inserts records when the assets table is empty, so restarting the service does not overwrite existing data. The free Render PostgreSQL plan is intended for evaluation and its database expires after the provider's retention period; use a paid persistent database for a long-lived demo. Free web services may spin down when idle and take time to wake.

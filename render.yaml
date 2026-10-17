@@ -1,0 +1,22 @@
+databases:
+  - name: veilant-db
+    databaseName: veilant
+    user: veilant
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: veilant-app
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run db:migrate:built && npm run db:seed:built && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: veilant-db
+          property: connectionString

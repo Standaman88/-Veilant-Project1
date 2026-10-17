@@ -1,5 +1,6 @@
 import cors from 'cors'
 import express, { type RequestHandler } from 'express'
+import { resolve } from 'node:path'
 import {
   createVulnerability,
   checkDatabaseConnection,
@@ -196,6 +197,18 @@ app.get('/api/vulnerabilities', asyncRoute(async (req, res) => {
   const pageSize = parseQueryInteger(req.query.pageSize, 'pageSize', 12, 100)
   res.json(await getVulnerabilityPage({ page, pageSize, severity, status, search }))
 }))
+
+const clientBuild = resolve(process.cwd(), 'dist')
+app.use(express.static(clientBuild))
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({ error: 'API endpoint not found.' })
+    return
+  }
+  res.sendFile(resolve(clientBuild, 'index.html'), (error) => {
+    if (error) next(error)
+  })
+})
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (error instanceof ApiError) {
