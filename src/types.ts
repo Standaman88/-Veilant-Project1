@@ -48,6 +48,20 @@ export type Overview = {
 export type DashboardData = {
   overview: Overview
   assets: Asset[]
-  vulnerabilities: Vulnerability[]
   trend: TrendPoint[]
+}
+
+export type VulnerabilityQuery = {
+  page: number
+  pageSize: number
+  severity: 'All' | Severity
+  status: 'All' | Status
+  search: string
+}
+
+export type VulnerabilityPage = {
+  items: Vulnerability[]
+  total: number
+  page: number
+  pageSize: number
 }

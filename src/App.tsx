@@ -8,7 +8,16 @@ import { useDashboardData } from './hooks/useDashboardData'
 import './App.css'
 
 function App() {
-  const { data, loadError, saveVulnerability, deleteVulnerability } = useDashboardData()
+  const {
+    data,
+    loadError,
+    query,
+    updateQuery,
+    vulnerabilityPage,
+    listError,
+    saveVulnerability,
+    deleteVulnerability,
+  } = useDashboardData()
 
   if (!data) {
     return <div className="loading">{loadError || 'Loading Veilant security command center…'}</div>
@@ -18,6 +27,7 @@ function App() {
     <div className="app-shell">
       <SiteHeader />
       <main className="dashboard" id="overview">
+        {loadError && <p className="form-error dashboard-error" role="alert">{loadError}</p>}
         <OverviewCards overview={data.overview} assetCount={data.assets.length} />
         <section className="content-grid">
           <ExposureTrend trend={data.trend} />
@@ -25,7 +35,10 @@ function App() {
         </section>
         <VulnerabilityManager
           assets={data.assets}
-          vulnerabilities={data.vulnerabilities}
+          query={query}
+          vulnerabilityPage={vulnerabilityPage}
+          listError={listError}
+          onQueryChange={updateQuery}
           onSave={saveVulnerability}
           onDelete={deleteVulnerability}
         />

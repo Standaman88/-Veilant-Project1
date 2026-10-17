@@ -431,6 +431,79 @@
   padding-bottom: 12px;
 }
 
+.dashboard-error {
+  margin: 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  color: #62758e;
+  font-size: 0.82rem;
+}
+
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pagination .text-button:disabled {
+  color: #9aa8b9;
+}
+
+.table-loading,
+.empty-table {
+  padding: 20px 12px;
+  color: #62758e;
+  text-align: center;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(18, 32, 50, 0.42);
+}
+
+.confirm-dialog {
+  width: min(100%, 440px);
+  border: 1px solid #dce4ee;
+  border-radius: 16px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(21, 39, 64, 0.25);
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 8px;
+  color: #263a53;
+}
+
+.confirm-dialog > p:not(.form-error) {
+  color: #62758e;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.destructive-button {
+  border-color: #b8334e;
+  background: #b8334e;
+}
+
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -796,6 +869,16 @@ tbody tr:hover {
   .filters select {
     flex: 1 1 120px;
     min-width: 0;
+  }
+
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pagination-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .table-wrap {

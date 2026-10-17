@@ -6,6 +6,7 @@ import {
   DatabaseUnavailableError,
   deleteVulnerability,
   getDashboardData,
+  getVulnerabilityPage,
   getVulnerabilityById,
   updateVulnerability,
 } from './db.js'
@@ -38,6 +39,18 @@ function parseId(value: string | string[]): number {
     throw new ApiError('ID must be a positive integer.', 400)
   }
   return id
+}
+
+function parseQueryInteger(value: unknown, name: string, fallback: number, maximum: number): number {
+  if (value === undefined) return fallback
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) {
+    throw new ApiError(`${name} must be a positive integer.`, 400)
+  }
+  const parsed = Number(value)
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > maximum) {
+    throw new ApiError(`${name} must be between 1 and ${maximum}.`, 400)
+  }
+  return parsed
 }
 
 function parseVulnerabilityInput(body: unknown): VulnerabilityInput {
@@ -164,31 +177,24 @@ app.delete('/api/vulnerabilities/:id', asyncRoute(async (req, res) => {
 }))
 
 app.get('/api/vulnerabilities', asyncRoute(async (req, res) => {
-  const dashboard = await getDashboardData()
-  let results = dashboard.vulnerabilities
-
   const severity = typeof req.query.severity === 'string' ? req.query.severity : 'All'
   const status = typeof req.query.status === 'string' ? req.query.status : 'All'
-  const search = typeof req.query.search === 'string' ? req.query.search.toLowerCase() : ''
-
-  if (severity !== 'All') {
-    results = results.filter((item) => item.severity === severity)
+  const search = typeof req.query.search === 'string' ? req.query.search.trim().toLowerCase() : ''
+  const severities: Array<Severity | 'All'> = ['All', 'Critical', 'High', 'Medium', 'Low']
+  const statuses: Array<Status | 'All'> = ['All', 'Open', 'In Progress', 'Mitigated', 'Resolved']
+  if (!severities.includes(severity as Severity | 'All')) {
+    throw new ApiError('severity is invalid.', 400)
+  }
+  if (!statuses.includes(status as Status | 'All')) {
+    throw new ApiError('status is invalid.', 400)
+  }
+  if (search.length > 200) {
+    throw new ApiError('search must be at most 200 characters.', 400)
   }
 
-  if (status !== 'All') {
-    results = results.filter((item) => item.status === status)
-  }
-
-  if (search.trim()) {
-    results = results.filter(
-      (item) =>
-        item.title.toLowerCase().includes(search) ||
-        item.asset.toLowerCase().includes(search) ||
-        item.packageName.toLowerCase().includes(search),
-    )
-  }
-
-  res.json(results)
+  const page = parseQueryInteger(req.query.page, 'page', 1, Number.MAX_SAFE_INTEGER)
+  const pageSize = parseQueryInteger(req.query.pageSize, 'pageSize', 12, 100)
+  res.json(await getVulnerabilityPage({ page, pageSize, severity, status, search }))
 }))
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

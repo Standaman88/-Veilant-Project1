@@ -62,35 +62,37 @@ const vulnerabilitySelect = `SELECT v.id, v.asset_id AS "assetId", a.name AS ass
 export async function getDashboardData() {
   const database = requirePool()
   const assetsQuery = await database.query(
-      'SELECT id, name, environment, owner, business_unit AS "businessUnit", risk_score AS "riskScore" FROM assets ORDER BY id ASC',
+    `SELECT a.id, a.name, a.environment, a.owner, a.business_unit AS "businessUnit",
+       a.risk_score AS "riskScore",
+       COUNT(v.id) FILTER (WHERE v.severity = 'Critical') AS critical,
+       COUNT(v.id) FILTER (WHERE v.severity = 'High') AS high,
+       COUNT(v.id) FILTER (WHERE v.severity = 'Medium') AS medium
+     FROM assets a
+     LEFT JOIN vulnerabilities v ON v.asset_id = a.id
+     GROUP BY a.id
+     ORDER BY a.id ASC`,
     )
-
-  const vulnerabilitiesQuery = await database.query(
-      `${vulnerabilitySelect}
-       FROM vulnerabilities v JOIN assets a ON a.id = v.asset_id ORDER BY v.id ASC`,
+  const summaryQuery = await database.query(
+    `SELECT
+       COUNT(*) FILTER (WHERE status <> 'Resolved') AS "totalOpen",
+       COUNT(*) FILTER (WHERE severity = 'Critical') AS critical,
+       COUNT(*) FILTER (WHERE severity = 'High') AS high,
+       COUNT(DISTINCT asset_id) FILTER (WHERE severity IN ('Critical', 'High')) AS "atRiskAssets"
+     FROM vulnerabilities`,
     )
 
   const assets = assetsQuery.rows.map((row) => ({
     ...row,
     id: Number(row.id),
     riskScore: Number(row.riskScore),
-    critical: 0,
-    high: 0,
-    medium: 0,
+    critical: Number(row.critical),
+    high: Number(row.high),
+    medium: Number(row.medium),
   }))
-
-  const vulnerabilities = vulnerabilitiesQuery.rows.map(mapVulnerability)
-
-  for (const asset of assets) {
-    const assetVulnerabilities = vulnerabilities.filter((item) => item.assetId === asset.id)
-    asset.critical = assetVulnerabilities.filter((item) => item.severity === 'Critical').length
-    asset.high = assetVulnerabilities.filter((item) => item.severity === 'High').length
-    asset.medium = assetVulnerabilities.filter((item) => item.severity === 'Medium').length
-  }
-
-  const criticalCount = vulnerabilities.filter((item) => item.severity === 'Critical').length
-  const highCount = vulnerabilities.filter((item) => item.severity === 'High').length
-  const openCount = vulnerabilities.filter((item) => item.status !== 'Resolved').length
+  const summary = summaryQuery.rows[0]
+  const criticalCount = Number(summary.critical)
+  const highCount = Number(summary.high)
+  const openCount = Number(summary.totalOpen)
 
   const overview = {
     totalOpen: openCount,
@@ -98,11 +100,7 @@ export async function getDashboardData() {
     high: highCount,
     containedThisWeek: 42 + (criticalCount % 14),
     remediationRate: 74 + (openCount % 13),
-    atRiskAssets: new Set(
-      vulnerabilities
-        .filter((item) => item.severity === 'Critical' || item.severity === 'High')
-        .map((item) => item.assetId),
-    ).size,
+    atRiskAssets: Number(summary.atRiskAssets),
   }
 
   const trend = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'].map((label, index) => ({
@@ -112,7 +110,70 @@ export async function getDashboardData() {
     medium: 19 + ((index * 9 + openCount) % 30),
   }))
 
-  return { overview, assets, vulnerabilities, trend }
+  return { overview, assets, trend }
+}
+
+export async function getVulnerabilityPage({
+  page,
+  pageSize,
+  severity,
+  status,
+  search,
+}: {
+  page: number
+  pageSize: number
+  severity: string
+  status: string
+  search: string
+}) {
+  const database = requirePool()
+  const values: (string | number)[] = []
+  const conditions: string[] = []
+
+  if (severity !== 'All') {
+    values.push(severity)
+    conditions.push(`v.severity = $${values.length}`)
+  }
+  if (status !== 'All') {
+    values.push(status)
+    conditions.push(`v.status = $${values.length}`)
+  }
+  if (search) {
+    values.push(search)
+    const parameter = `$${values.length}`
+    conditions.push(
+      `(POSITION(LOWER(${parameter}) IN LOWER(a.name)) > 0
+        OR POSITION(LOWER(${parameter}) IN LOWER(v.title)) > 0
+        OR POSITION(LOWER(${parameter}) IN LOWER(v.package_name)) > 0)`,
+    )
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+  const countResult = await database.query(
+    `SELECT COUNT(*) AS total
+     FROM vulnerabilities v JOIN assets a ON a.id = v.asset_id
+     ${where}`,
+    values,
+  )
+  const total = Number(countResult.rows[0].total)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const actualPage = Math.min(page, pageCount)
+  const paginationValues = [...values, pageSize, (actualPage - 1) * pageSize]
+  const result = await database.query(
+    `${vulnerabilitySelect}
+     FROM vulnerabilities v JOIN assets a ON a.id = v.asset_id
+     ${where}
+     ORDER BY v.id ASC
+     LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+    paginationValues,
+  )
+
+  return {
+    items: result.rows.map(mapVulnerability),
+    total,
+    page: actualPage,
+    pageSize,
+  }
 }
 
 export async function getVulnerabilityById(id: number): Promise<Vulnerability | null> {
