@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 16px 18px;
+  gap: 20px;
+  padding: 14px 20px;
   border: 1px solid #e0e7f0;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.78);
@@ -33,20 +33,12 @@
 .brand-block {
   display: flex;
   align-items: center;
-  gap: 14px;
   flex-shrink: 0;
 }
 
-.brand-mark {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #63a4ff, #65d3c0);
-  color: #06111a;
-  font-weight: 800;
-  font-size: 1.4rem;
+.brand-block .eyebrow {
+  margin: 0 0 3px;
+  font-size: 0.64rem;
 }
 
 .eyebrow {
@@ -62,8 +54,12 @@
 }
 
 .topbar h1 {
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  letter-spacing: -0.06em;
+  margin: 0;
+  color: #263a53;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .header-actions {
@@ -76,16 +72,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 2vw, 26px);
+  gap: 4px;
 }
 
 .main-nav a,
 .footer-nav a,
 .footer-bottom a {
   color: #526781;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   text-decoration: none;
   transition: color 0.2s ease;
+}
+
+.main-nav a {
+  padding: 0.6rem 0.7rem;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.main-nav a:hover {
+  background: #f1f6f9;
 }
 
 .main-nav a:hover,
@@ -708,13 +714,19 @@ tbody tr:hover {
 @media (max-width: 980px) {
   .topbar {
     flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .main-nav {
-    order: 3;
+    order: 2;
     justify-content: flex-start;
-    width: 100%;
-    padding: 4px 0 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-actions {
+    order: 3;
+    margin-left: auto;
   }
 
   .kpi-grid,
@@ -747,27 +759,20 @@ tbody tr:hover {
   }
 
   .brand-block {
-    width: 100%;
     min-width: 0;
-  }
-
-  .brand-block > div:last-child {
-    min-width: 0;
-  }
-
-  .brand-block .eyebrow {
-    margin-bottom: 2px;
   }
 
   .topbar h1 {
-    font-size: clamp(1.25rem, 5.5vw, 1.45rem);
-    line-height: 1.2;
-    letter-spacing: -0.04em;
+    font-size: 1rem;
+    white-space: normal;
   }
 
   .main-nav {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    order: 3;
+    flex: auto;
+    width: 100%;
     gap: 8px;
     padding: 0;
   }
@@ -782,6 +787,7 @@ tbody tr:hover {
   }
 
   .header-actions {
+    order: 2;
     width: 100%;
   }
 

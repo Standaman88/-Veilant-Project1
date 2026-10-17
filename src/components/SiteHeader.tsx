@@ -2,7 +2,6 @@ export function SiteHeader() {
   return (
     <header className="topbar">
       <div className="brand-block">
-        <div className="brand-mark">V</div>
         <div>
           <p className="eyebrow">Veilant</p>
           <h1>Security command center</h1>
